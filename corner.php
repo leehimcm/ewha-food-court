@@ -57,9 +57,7 @@ function displayCornerInfo($conn, $cornerId, $cornerName) {
 
     <?php
     mysqli_free_result($result);
-    ?>
 }
-
 
 // 코너 1 한식
 displayCornerInfo($conn, 1, "코너 1 한식");
@@ -76,7 +74,6 @@ displayCornerInfo($conn, 4, "코너 4 아시안음식");
 // 코너 5 양식
 displayCornerInfo($conn, 5, "코너 5 양식");
 
-<?php
 $popular_menu_query = "SELECT 
                         M.corner_id AS 코너번호,
                         M.menu_name AS 메뉴이름,
@@ -124,9 +121,6 @@ while ($row = mysqli_fetch_array($popular_menu_result)) {
 
 <?php
 mysqli_free_result($popular_menu_result);
-?>
-
-<?php
 mysqli_close($conn);
 ?>
 
