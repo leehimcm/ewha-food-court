@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>코너별 메뉴별 주문 건수와 매출</title>
+    <title>코너별 메뉴별 주문 건수와 매출 & 각 코너별 판매량 인기 순위</title>
 </head>
 <body>
 <?php
@@ -14,11 +14,11 @@ if (mysqli_connect_errno()) {
     exit();
 }
 
-function displayCornerInfo($conn, $cornerId, $cornerName) {
+function showMenuOrderRanking($conn, $cornerId, $cornerName) {
     $query = "SELECT 
         M.menu_name AS 메뉴이름,
         SUM(OM.quantity) AS 주문건수,
-        M.price * SUM(OM.quantity) AS 매출
+        SUM(M.price * OM.quantity) AS 매출
     FROM 
         menu M
     JOIN 
@@ -26,7 +26,9 @@ function displayCornerInfo($conn, $cornerId, $cornerName) {
     WHERE 
         M.corner_id = $cornerId
     GROUP BY 
-        M.menu_name";
+        M.menu_name
+    ORDER BY
+          주문건수 DESC";
     $result = mysqli_query($conn, $query);
 
     if (!$result) {
@@ -35,7 +37,7 @@ function displayCornerInfo($conn, $cornerId, $cornerName) {
     }
     ?>
     <!--테이블 생성-->
-    <h1><?= $cornerName ?>의 메뉴별 주문 건수와 매출</h1>
+    <h1><?= $cornerName ?>의 판매량 인기 순위</h1>
 
     <table border="1">
         <tr>
@@ -59,59 +61,53 @@ function displayCornerInfo($conn, $cornerId, $cornerName) {
     mysqli_free_result($result);
 }
 
-// 코너 1 한식
-displayCornerInfo($conn, 1, "코너 1 한식");
+showMenuOrderRanking($conn, 1, "코너 1 한식");
+showMenuOrderRanking($conn, 2, "코너 2 분식");
+showMenuOrderRanking($conn, 3, "코너 3 중국음식");
+showMenuOrderRanking($conn, 4, "코너 4 아시안음식");
+showMenuOrderRanking($conn, 5, "코너 5 양식");
 
-// 코너 2 분식
-displayCornerInfo($conn, 2, "코너 2 분식");
-
-// 코너 3 중국음식
-displayCornerInfo($conn, 3, "코너 3 중국음식");
-
-// 코너 4 아시안음식
-displayCornerInfo($conn, 4, "코너 4 아시안음식");
-
-// 코너 5 양식
-displayCornerInfo($conn, 5, "코너 5 양식");
-
-$popular_menu_query = "SELECT 
+$corner_menu_sales_query = "SELECT 
                         M.corner_id AS 코너번호,
+                        M.menu_id AS 메뉴번호,
                         M.menu_name AS 메뉴이름,
                         SUM(OM.quantity) AS 주문건수,
-                        M.price * SUM(OM.quantity) AS 매출
+                        SUM(M.price * OM.quantity) AS 매출
                     FROM 
                         menu M
                     JOIN 
                         ordered_menu OM ON M.menu_id = OM.menu_id
                     GROUP BY 
-                        M.corner_id
+                        M.corner_id, M.menu_id, M.menu_name
                     ORDER BY 
-                        SUM(OM.quantity) DESC";
+                        M.corner_id, M.menu_id";
 
-$popular_menu_result = mysqli_query($conn, $popular_menu_query);
+$corner_menu_sales_result = mysqli_query($conn, $corner_menu_sales_query);
 
-if (!$popular_menu_result) {
+if (!$corner_menu_sales_result) {
     echo "Query Error: " . mysqli_error($conn);
     exit();
 }
 ?>
 
 <!--테이블 생성-->
-<h1>코너별 가장 인기있는 메뉴</h1>
+<h1>코너별 메뉴별 주문 건수와 매출</h1>
 
 <table border="1">
     <tr>
         <th>코너번호</th>
+        <th>메뉴번호</th>
         <th>메뉴이름</th>
         <th>주문건수</th>
         <th>매출</th>
     </tr>
 
 <?php
-while ($row = mysqli_fetch_array($popular_menu_result)) {
+while ($row = mysqli_fetch_array($corner_menu_sales_result)) {
 ?>
     <tr>
         <td><?= $row['코너번호'] ?></td>
+        <td><?= $row['메뉴번호'] ?></td>
         <td><?= $row['메뉴이름'] ?></td>
         <td><?= $row['주문건수'] ?></td>
         <td><?= $row['매출'] ?></td>
@@ -120,7 +116,7 @@ while ($row = mysqli_fetch_array($popular_menu_result)) {
 </table>
 
 <?php
-mysqli_free_result($popular_menu_result);
+mysqli_free_result($corner_menu_sales_result);
 mysqli_close($conn);
 ?>
 
